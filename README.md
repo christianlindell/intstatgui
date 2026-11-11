@@ -9,7 +9,7 @@ parquet. Paketet bygger på CRAN-paketen [eurostat](https://ropengov.github.io/e
 ## Installation
 
 ```r
-# install.packages("devtools")
+# install.packages("remotes")
 remotes::install_github("christianlindell/intstatgui")
 ```
 
