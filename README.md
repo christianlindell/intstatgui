@@ -10,7 +10,7 @@ parquet. Paketet bygger på CRAN-paketen [eurostat](https://ropengov.github.io/e
 
 ```r
 # install.packages("devtools")
-devtools::install("C:/Users/chris/OneDrive/R_claude/addin_eurostat/intstatgui")
+remotes::install_github("christianlindell/intstatgui")
 ```
 
 Valfria paket: `OECDdata` (krävs för OECD), `writexl` eller `openxlsx` (Excel), `nanoparquet` eller `arrow` (parquet),
