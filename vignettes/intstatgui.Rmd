@@ -1,0 +1,150 @@
+---
+title: "Kom igång med intstatgui"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Kom igång med intstatgui}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+# Läser exempelkoden från inst/examples så att vignetten alltid visar samma
+# exempel som hjälpsidorna
+exempel <- function(fn) {
+  fil <- file.path("..", "inst", "examples", paste0(fn, ".R"))
+  if (!file.exists(fil)) fil <- system.file("examples", paste0(fn, ".R"), package = "intstatgui")
+  readLines(fil, encoding = "UTF-8")
+}
+```
+
+intstatgui gör det enkelt att hämta data från Eurostat och OECD. I ett grafiskt gränssnitt väljer
+du datakälla, letar upp en tabell, väljer variabler och värden och får färdig R-kod att klistra in
+i ett skript. Samma hämtning går också att göra direkt med funktionerna. Paketet bygger på
+CRAN-paketen eurostat och OECDdata. Alla funktioner utgår från Eurostat och tar parametern `source`,
+där `source = "oecd"` väljer OECD.
+
+Alla exempel kräver internet, så de visas här men körs inte när vignetten byggs.
+
+```{r}
+library(intstatgui)
+```
+
+## Gränssnittet
+
+`es_gui()` öppnar gränssnittet. Ingen parameter är obligatorisk: `viewer` anger var det visas
+(eget fönster, Viewer-panelen eller webbläsaren), `addin` lägger till knappen som infogar koden i
+skriptet, `lang` väljer förvalt språk och `source` förvald datakälla. I Positron visas appen i Positrons Viewer. Funktionen
+returnerar den infogade koden, eller `NULL`.
+
+```{r, code = exempel("es_gui"), eval = FALSE}
+```
+
+`es_gui_addin()` är det som körs från menyn Addins i RStudio ("Eurostat- eller OECD-tabell till R-kod"). Den
+har inga parametrar och öppnar gränssnittet i ett eget fönster med knappen "Infoga koden i
+skriptet och stäng". Koden returneras också.
+
+```{r, code = exempel("es_gui_addin"), eval = FALSE}
+```
+
+Arbetet går i fyra steg, ett per flik:
+
+1. **Hitta tabell.** Välj datakälla och språk, bläddra i ämnesträdet eller sök på tabellnamn eller
+   id och klicka på en tabell. Hos Eurostat
+   visas bara dataset, tills du avmarkerar rutan för det. Tabellistan
+   sparas i 24 timmar per datakälla och språk.
+2. **Välj variabler.** Varje variabel har en lista där ett klick väljer ett värde och avmarkerar övriga, Ctrl+klick lägger till eller tar bort ett värde och Skift+klick väljer ett intervall. En utelämnad
+   variabel betyder alla värden och inte en summa, så hos Eurostat kräver varje variabel ett val. Hos OECD betyder en tom lista alla möjliga värden.
+   Den senaste perioden och variabler med ett enda värde är förvalda. "Hämta alltid senaste
+   perioden" blir `lastTimePeriod = 1` i koden. Listan med regioner hos Eurostat går att begränsa till länder,
+   NUTS 1, NUTS 2, NUTS 3 eller aggregat, under förutsättning att tabellen har minst två av nivåerna.
+3. **Kod och data.** Här står koden, med `lang` och `time_format`, och antalet celler. Alla celler
+   behöver inte ha data. Kryssa i de variabler som också ska få en kodkolumn (`<variabel>_code`) och
+   "R-kompatibla kolumnnamn" för att få en rad med `janitor::clean_names()`. "Kod som bara kräver
+   paketet eurostat" ger ett anrop till `eurostat::get_eurostat()`, så länge frågan inte har
+   kodkolumner. Med "Hämta data" visas datat och kan laddas ner. Kodkolumner och
+   kolumnnamn ändras direkt, utan ny hämtning. Ändrar du något som påverkar vad som hämtas raderas
+   datat och en text säger att det behöver hämtas på nytt.
+4. **Information.** Fliken är gråtonad tills knappen "Information" i flik 1 har gett den innehåll.
+   Den visar samma uppgifter som `es_get_comments()`.
+
+## Hitta en tabell utan gränssnittet
+
+`es_search_tables()` söker i datakällans tabellista. Ingen parameter är obligatorisk.
+`pattern` är sökorden, som alla måste finnas i tabellens id eller namn, `lang` är språket,
+`only_datasets` väljer bort de färdiga tabellerna och `source` väljer datakälla. Funktionen returnerar en tibble med id, namn,
+typ, perioder, uppdateringsdatum och antal observationer.
+
+```{r, code = exempel("es_search_tables"), eval = FALSE}
+```
+
+`es_get_codes()` visar vilka variabler och värden en tabell har, vilket är det du behöver för att
+skriva `filters`. `id` är obligatorisk, `variable` begränsar till en variabel, `lang` väljer
+språk på namnen och `source` datakälla. Funktionen returnerar en tibble med koder och namn.
+
+```{r, code = exempel("es_get_codes"), eval = FALSE}
+```
+
+`es_get_comments()` ger uppgifter om en eller flera tabeller. Hos Eurostat är det när de
+uppdaterades, vilka perioder de har, källa och länkar till metadata, fotnoter, DOI och Data Browser.
+Hos OECD är det beskrivning, ansvarig enhet, version och en länk till Data Explorer. `id` är
+obligatorisk, `lang` styr språket och `source` väljer datakälla. Funktionen returnerar en tibble.
+
+```{r, code = exempel("es_get_comments"), eval = FALSE}
+```
+
+## Hämta data
+
+`es_get_data()` är funktionen som koden från gränssnittet anropar. `id` är obligatorisk och är en
+enda tabell. `filters` väljer värden; en variabel som saknas där hämtas med alla sina
+värden, och utan filter hämtas hela tabellen som fil. Med `type` väljer du namn eller koder,
+`code_variables` ger kodkolumner, `lang` väljer språk, `time_format` hur tiden visas, `na_rm` om
+rader utan värde ska tas bort, `quiet` stänger av meddelanden och `source` väljer datakälla. Funktionen returnerar en tibble
+med en kolumn per variabel, `time` och `values`.
+
+Stora frågor delas automatiskt. Svarar Eurostat att en fråga är för stor för ett direkt svar hämtas
+hela tabellen som fil, och raderna väljs ur den. Eurostats flaggor följer inte med, eftersom
+`get_eurostat()` bara kan ge dem för en hel tabell. Cachen i `get_eurostat()` används inte, eftersom
+den inte skiljer på språk.
+
+```{r, code = exempel("es_get_data"), eval = FALSE}
+```
+
+## OECD
+
+Alla värden går inte att kombinera, till exempel en folkmängd i enheten PPP-dollar. Med OECD frågar gränssnittet efter varje val vilka värden som är möjliga. Övriga blir gråa, redan
+valda sådana värden blir röda, antalet värden med data visas och ett urval utan data går inte att hämta.
+En tom lista betyder alla möjliga värden, så varje valt mått får sina egna enheter. Not applicable (`_Z`)
+tas alltid med när ett annat värde är valt i variabeln, så att mått där variabeln inte gäller blir kvar. Har en variabel
+flera valda värden och något inte ger någon rad säger ett meddelande det efter hämtningen.
+Eurostat har ingen motsvarande fråga, så där visar sig en kombination utan data först när du hämtar.
+
+OECD kräver paketet OECDdata och skiljer sig på några sätt från Eurostat. OECD tillåter 60 hämtningar
+av data per timme och spärrar tillfälligt vid fler, så stora frågor delas inte upp. Tabellen är en
+hämtning, och en till för varje sorts period om du väljer till exempel både år och månader. OECD anger
+bara vilken tid en tabell täcker, så perioderna i listan räknas fram från tabellens frekvenser och alla
+behöver inte ha data. "Senaste perioden" gäller tabellens senaste period och inte varje serie för sig,
+så svaret kan bli tomt. Data har kolumnen `flagga` med värdets status och `UNIT_MULT`, som visar vilken
+tiopotens värdet anges i. Språken är engelska och franska, och tabellistan saknar perioder och
+uppdateringsdatum.
+
+## Inställningar
+
+| Inställning | Vad den gör |
+|---|---|
+| `options(intstatgui.source = "oecd")` | Förvald datakälla |
+| `options(intstatgui.lang = "de")` | Förvalt språk |
+| `options(intstatgui.clean_names = TRUE)` | Förkryssad ruta för R-kompatibla kolumnnamn |
+| `options(intstatgui.positron_viewer = "browser")` | Var appen visas i Positron |
+
+## Översikt över funktionerna
+
+| Funktion | Vad den gör | Obligatoriska parametrar |
+|---|---|---|
+| `es_gui()` | Grafiskt gränssnitt för Eurostat och OECD | – |
+| `es_gui_addin()` | RStudio-addin: tabell från Eurostat eller OECD till R-kod | – |
+| `es_get_data()` | Hämta data från Eurostat eller OECD | `id` |
+| `es_search_tables()` | Sök bland tabellerna hos Eurostat eller OECD | – |
+| `es_get_codes()` | Hämta en tabells variabler och värden | `id` |
+| `es_get_comments()` | Hämta uppgifter om en tabell | `id` |

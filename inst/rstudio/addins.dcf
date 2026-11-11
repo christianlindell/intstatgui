@@ -1,0 +1,4 @@
+Name: Eurostat- eller OECD-tabell till R-kod
+Description: Bläddra bland och sök i tabellerna hos Eurostat och OECD, välj variabler och värden och infoga färdig es_get_data()-kod i skriptet.
+Binding: es_gui_addin
+Interactive: true

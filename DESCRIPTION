@@ -1,0 +1,49 @@
+Package: intstatgui
+Title: Data From Eurostat and the OECD With a Graphical Interface and RStudio Addin
+Version: 0.6.1
+Authors@R: c(
+    person("Christian", "Lindell", , "christian_lindell@yahoo.com", role = c("aut", "cre")),
+    person("Peter", "Möller", , "larspetermoller@gmail.com", role = "ctb",
+           comment = "pxweb2rgui, which the interface is based on")
+  )
+Description: A Shiny interface, also available as an RStudio and Positron
+    addin, for fetching data from Eurostat and the OECD. Browse or search
+    the tables, choose variables and values, and get ready-made R code or
+    download the data as txt, Excel or parquet. Builds on the 'eurostat' and
+    'OECDdata' packages. Handles labels and code columns and splitting of
+    very large Eurostat requests.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Language: sv
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
+Imports:
+    bslib (>= 0.5.0),
+    digest,
+    dplyr,
+    DT,
+    eurostat (>= 4.0.0),
+    htmltools,
+    httr2,
+    shiny (>= 1.7.0),
+    stats,
+    tibble,
+    tools,
+    utils,
+    xml2
+Suggests:
+    arrow,
+    clipr,
+    janitor,
+    knitr,
+    nanoparquet,
+    OECDdata,
+    openxlsx,
+    rmarkdown,
+    rstudioapi,
+    testthat (>= 3.0.0),
+    writexl
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1
